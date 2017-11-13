@@ -13,7 +13,8 @@
     ".eslintrc": true,
     ".editorconfig": true,
     "build/": true,
-    "build/*": true
+    "build/*": true,
+    "phonegap/platform/*": true
   },
   "npmignore": {
     "_SYNCAPP/": true,
