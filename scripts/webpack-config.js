@@ -1,6 +1,5 @@
 /* Purpose: Export development and production webpack configuration objects */
 
-'use strict'
 
 // Load modules
 const env = require('./env')
@@ -17,7 +16,7 @@ const rec = require('recursive-readdir-sync')
 fs.emptyDirSync(abs(env.cache, 'build'))
 
 // Create configuration
-let createConfiguration = function (mode) {
+const createConfiguration = function (mode) {
   // Copy index.ejs file to cache
   try {
     fs.copySync(abs(__dirname, '../client/index.ejs'), abs(env.cache, 'index.ejs'))
@@ -31,8 +30,8 @@ let createConfiguration = function (mode) {
   }
 
   // Define loaders
-  let ExtractTextPlugin = require('extract-text-webpack-plugin')
-  let loaders = [
+  const ExtractTextPlugin = require('extract-text-webpack-plugin')
+  const loaders = [
     // JS files
     {
       test: /\.js$/,
@@ -40,31 +39,37 @@ let createConfiguration = function (mode) {
       include: [
         abs(__dirname, '../client'),
         abs(__dirname, '../scripts'),
-        abs(env.app)
-      ]
+        abs(env.app),
+      ],
     },
     // Vue files
     {
       test: /\.vue$/,
-      loader: 'vue'
+      loader: 'vue',
     },
     // JSON files
     {
       test: /\.json$/,
-      loader: 'json'
+      loader: 'json',
     },
     // CSS files
     {
       test: /\.css$/,
-      loader: mode === 'development' ? 'vue-style-loader!css-loader' : ExtractTextPlugin.extract('css-loader' + (env.cfg.buildSourcemaps === true ? '?sourceMap' : ''))
+      loader: mode === 'development' ? 'vue-style-loader!css-loader' : ExtractTextPlugin.extract(`css-loader${env.cfg.buildSourcemaps === true ? '?sourceMap' : ''}`),
+    },
+    {
+      test: /\.s[a|c]ss$/,
+      loader: 'style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap'
     },
     // Image files
     {
       test: /\.(png|jpe?g|gif)(\?.*)?$/,
       loader: 'url',
       query: {
+        useRelativePath: true,
         limit: 1,
-        name: 'img/[name].[hash:7].[ext]'
+        name: '[path][name].[ext]',
+        context: 'app/'
       }
     },
     // Preloader icon image
@@ -73,8 +78,8 @@ let createConfiguration = function (mode) {
       loader: 'url',
       query: {
         limit: 1,
-        name: '[name].[ext]'
-      }
+        name: '[name].[ext]',
+      },
     },
     // Favicon
     {
@@ -82,40 +87,49 @@ let createConfiguration = function (mode) {
       loader: 'url',
       query: {
         limit: 1,
-        name: '[name].[ext]'
-      }
+        name: '[name].[ext]',
+      },
     },
-    // Font files
+ // Font files
     {
       test: /\.(woff2?|eot|ttf|otf|svg)(\?.*)?$/,
       loader: 'url',
       query: {
+        // limit: 1,
+        // name: 'fonts/[name].[hash:7].[ext]'
+        useRelativePath: true,
         limit: 1,
-        name: 'fonts/[name].[hash:7].[ext]'
+        name: '[path][name].[ext]',
+        context: 'app/'
       }
-    }
+    },
   ]
 
   // Start configuration object
-  let config = {
+
+  //const deployPath = mode === 'development' ? abs(env.app) : abs(env.cache, 'build/www');
+
+  const config = {
     entry: {
       init: [abs(__dirname, '../client/init.js')],
-      app: [abs(__dirname, '../client/app.js')]
+      app: [abs(__dirname, '../client/app.js')],
     },
     output: {
       path: mode === 'development' ? abs(env.app) : abs(env.cache, 'build/www'),
-      filename: mode === 'development' ? '[name].js' : '[name].[hash:7].js'
+      filename: mode === 'development' ? '[name].js' : '[name].[hash:7].js',
     },
     resolve: {
       extensions: ['', '.js', '.vue', '.json'],
+      root: mode === 'development' ? abs(env.app) : abs(env.cache, 'build/www'),
       alias: {
-        'vue$': 'vue/dist/vue.common.js'
-      }
+        vue$: 'vue/dist/vue.common.js',
+        fonts: 'fonts'
+      },
     },
     module: {
-      loaders: loaders
+      loaders,
     },
-    plugins: []
+    plugins: [],
   }
 
   // Add themes on production build
@@ -123,10 +137,10 @@ let createConfiguration = function (mode) {
     if (env.cfg.theme === 'ios-material' || env.cfg.theme === 'material-ios') {
       config.entry = us.extend({
         ios: [abs(__dirname, '../client/ios.js')],
-        material: [abs(__dirname, '../client/material.js')]
+        material: [abs(__dirname, '../client/material.js')],
       }, config.entry)
     } else {
-      config.entry.app.unshift(abs(__dirname, '../client/' + env.cfg.theme + '.js'))
+      config.entry.app.unshift(abs(__dirname, `../client/${env.cfg.theme}.js`))
     }
   }
 
@@ -156,34 +170,32 @@ let createConfiguration = function (mode) {
   }
 
   // Add environment variables
-  let firebaseConfigSource = mode === 'development' || env.arg.dev === true ? 'devFirebase' : 'firebase'
-  let firebaseConfig = env.cfg[firebaseConfigSource]
-  config.plugins.push(
-    new webpack.DefinePlugin({
-      'process.env': {
-        PROJECT_VERSION: '"' + projectVersion + '"',
-        FRAMEWORK_VERSION: '"' + frameworkVersion + '"',
-        THEME: '"' + env.cfg.theme + '"',
-        APP_ROOT_FROM_SCRIPTS: '"' + (path.relative(__dirname, env.app) + path.sep).replace(/\\/g, '\\\\\\\\') + '"',
-        PROJECT_ROOT_FROM_SCRIPTS: '"' + (path.relative(__dirname, env.proj) + path.sep).replace(/\\/g, '\\\\\\\\') + '"',
-        CACHE_ROOT_FROM_SCRIPTS: '"' + (path.relative(__dirname, env.cache) + path.sep).replace(/\\/g, '\\\\\\\\') + '"',
-        USE_GLOBAL_DATA_OBJECT: '"' + env.cfg.useGlobalDataObject + '"',
-        FONT_FRAMEWORK7: '"' + env.cfg.useIconFonts.framework7 + '"',
-        FONT_MATERIAL: '"' + env.cfg.useIconFonts.material + '"',
-        FONT_ION: '"' + env.cfg.useIconFonts.ion + '"',
-        FONT_AWESOME: '"' + env.cfg.useIconFonts.fontawesome + '"',
-        USE_FIREBASE_APP: '"' + (firebaseConfig.apiKey !== '' && (firebaseConfig.authDomain !== '' || firebaseConfig.databaseURL !== '' || firebaseConfig.storageBucket !== '')) + '"',
-        USE_FIREBASE_AUTH: '"' + (firebaseConfig.authDomain !== '') + '"',
-        USE_FIREBASE_DATABASE: '"' + (firebaseConfig.databaseURL !== '') + '"',
-        USE_FIREBASE_STORAGE: '"' + (firebaseConfig.storageBucket !== '') + '"',
-        RESET_LOCAL_STORAGE: '"' + env.cfg.resetLocalStorageOnVersionChange + '"',
-        NODE_ENV: '"' + mode + '"',
-        FIREBASE_CONFIG: '"' + firebaseConfigSource + '"',
-        LANGUAGES: '"' + languages.join(',') + '"',
-        CUSTOM_VUE_SCRIPT: '"' + found(env.app, 'vue.js') + '"'
-      }
-    })
-  )
+  const firebaseConfigSource = mode === 'development' || env.arg.dev === true ? 'devFirebase' : 'firebase'
+  const firebaseConfig = env.cfg[firebaseConfigSource]
+  config.plugins.push(new webpack.DefinePlugin({
+    'process.env': {
+      PROJECT_VERSION: `"${projectVersion}"`,
+      FRAMEWORK_VERSION: `"${frameworkVersion}"`,
+      THEME: `"${env.cfg.theme}"`,
+      APP_ROOT_FROM_SCRIPTS: `"${(path.relative(__dirname, env.app) + path.sep).replace(/\\/g, '\\\\\\\\')}"`,
+      PROJECT_ROOT_FROM_SCRIPTS: `"${(path.relative(__dirname, env.proj) + path.sep).replace(/\\/g, '\\\\\\\\')}"`,
+      CACHE_ROOT_FROM_SCRIPTS: `"${(path.relative(__dirname, env.cache) + path.sep).replace(/\\/g, '\\\\\\\\')}"`,
+      USE_GLOBAL_DATA_OBJECT: `"${env.cfg.useGlobalDataObject}"`,
+      FONT_FRAMEWORK7: `"${env.cfg.useIconFonts.framework7}"`,
+      FONT_MATERIAL: `"${env.cfg.useIconFonts.material}"`,
+      FONT_ION: `"${env.cfg.useIconFonts.ion}"`,
+      FONT_AWESOME: `"${env.cfg.useIconFonts.fontawesome}"`,
+      USE_FIREBASE_APP: `"${firebaseConfig.apiKey !== '' && (firebaseConfig.authDomain !== '' || firebaseConfig.databaseURL !== '' || firebaseConfig.storageBucket !== '')}"`,
+      USE_FIREBASE_AUTH: `"${firebaseConfig.authDomain !== ''}"`,
+      USE_FIREBASE_DATABASE: `"${firebaseConfig.databaseURL !== ''}"`,
+      USE_FIREBASE_STORAGE: `"${firebaseConfig.storageBucket !== ''}"`,
+      RESET_LOCAL_STORAGE: `"${env.cfg.resetLocalStorageOnVersionChange}"`,
+      NODE_ENV: `"${mode}"`,
+      FIREBASE_CONFIG: `"${firebaseConfigSource}"`,
+      LANGUAGES: `"${languages.join(',')}"`,
+      CUSTOM_VUE_SCRIPT: `"${found(env.app, 'vue.js')}"`,
+    },
+  }))
 
   // Optimize ordering, reduce size
   config.plugins.push(new webpack.optimize.OccurrenceOrderPlugin())
@@ -193,28 +205,39 @@ let createConfiguration = function (mode) {
     config.plugins.push(new webpack.NoErrorsPlugin())
   }
 
+  config.sassResources = './app/scss/main.scss'
+
   // Add hot file reload in development mode
   if (mode === 'development') {
-    config.entry['app'].unshift(abs(__dirname, 'dev-client.js'))
+    config.entry.app.unshift(abs(__dirname, 'dev-client.js'))
     config.plugins.push(new webpack.HotModuleReplacementPlugin())
+
+    config.vue = {
+      loaders: {
+        //css: 'file-loader!vue-style-loader|css-loader?sourceMap',
+        css: 'file-loader!vue-style-loader|css-loader?sourceMap!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+        scss: 'vue-style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+      },
+    }
   }
 
   // Extract CSS code to extra file
   if (mode === 'production') {
-    config.plugins.push(
-      new ExtractTextPlugin('[name].[hash:7].css')
-    )
+    config.plugins.push(new ExtractTextPlugin('[name].[hash:7].css'))
     config.vue = {
       loaders: {
-        css: ExtractTextPlugin.extract('vue-style-loader', 'css-loader' + (env.cfg.buildSourcemaps === true ? '?sourceMap' : ''))
-      }
+        // css: ExtractTextPlugin.extract('vue-style-loader', `css-loader${env.cfg.buildSourcemaps === true ? '?sourceMap' : ''}`),
+        // sass: 'css-loader!sass-loader'
+        css: 'file-loader!vue-style-loader|css-loader?sourceMap!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+        scss: 'vue-style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+      },
     }
   }
 
   // Define icon tags for production
   let iconTags = ''
   if (mode === 'production') {
-    iconTags = '<meta name="theme-color" content="' + env.cfg.iconBackgroundColor + '" />' +
+    iconTags = `<meta name="theme-color" content="${env.cfg.iconBackgroundColor}" />` +
                '<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />' +
                '<link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32" />' +
                '<link rel="icon" type="image/png" href="favicon-16x16.png" sizes="16x16" />' +
@@ -222,23 +245,21 @@ let createConfiguration = function (mode) {
   }
 
   // Plugin: HTML index file generation
-  let HtmlPlugin = require('html-webpack-plugin')
-  config.plugins.push(
-    new HtmlPlugin({
-      chunks: ['init'],
-      filename: mode === 'development' ? abs(env.app, 'index.html') : abs(env.cache, 'build/www/index.html'),
-      template: abs(env.cache, 'index.ejs'),
-      title: env.cfg.title,
-      iconTags: iconTags, // favicon.ico will be loaded by browser default from root directory
-      iconBackgroundColor: env.cfg.iconBackgroundColor,
-      inject: true,
-      minify: mode === 'production' ? {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeAttributeQuotes: true
-      } : undefined
-    })
-  )
+  const HtmlPlugin = require('html-webpack-plugin')
+  config.plugins.push(new HtmlPlugin({
+    chunks: ['init'],
+    filename: mode === 'development' ? abs(env.app, 'index.html') : abs(env.cache, 'build/www/index.html'),
+    template: abs(env.cache, 'index.ejs'),
+    title: env.cfg.title,
+    iconTags, // favicon.ico will be loaded by browser default from root directory
+    iconBackgroundColor: env.cfg.iconBackgroundColor,
+    inject: true,
+    minify: mode === 'production' ? {
+      removeComments: true,
+      collapseWhitespace: true,
+      removeAttributeQuotes: true,
+    } : undefined,
+  }))
 
   // Add source maps
   if (mode === 'development') {
@@ -251,20 +272,18 @@ let createConfiguration = function (mode) {
 
   // Add JS compression
   if (mode === 'production') {
-    config.plugins.push(
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false
-        }
-      })
-    )
+    config.plugins.push(new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false,
+      },
+    }))
   }
 
   // Add offline support
-  let OfflinePlugin = require('offline-plugin')
+  const OfflinePlugin = require('offline-plugin')
   if (mode === 'production') {
     config.plugins.push(new OfflinePlugin({
-      version: 'v' + env.pkg.version,
+      version: `v${env.pkg.version}`,
       autoUpdate: 1000 * 60 * 15,
       publicPath: '/',
       externals: [
@@ -272,16 +291,16 @@ let createConfiguration = function (mode) {
         'manifest.json',
         'favicon-16x16.png',
         'favicon-32x32.png',
-        'android-chrome-192x192.png'
+        'android-chrome-192x192.png',
       ],
       ServiceWorker: {
         output: 'offline-service-worker.js',
-        events: true
+        events: true,
       },
       AppCache: {
         directory: '',
-        events: true
-      }
+        events: true,
+      },
     }))
   }
 
@@ -292,5 +311,5 @@ let createConfiguration = function (mode) {
 // Export configuration
 module.exports = {
   development: createConfiguration('development'),
-  production: createConfiguration('production')
+  production: createConfiguration('production'),
 }
