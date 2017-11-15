@@ -19,6 +19,8 @@ let webpack = require('webpack')
 let mode
 if (env.arg.dev === true) {
   mode = 'dev'
+} else if (env.arg.build === true) {
+  mode = 'build'
 } else if (env.arg.patch === true) {
   mode = 'patch'
 } else if (env.arg.minor === true) {
@@ -26,7 +28,7 @@ if (env.arg.dev === true) {
 } else if (env.arg.major === true) {
   mode = 'major'
 } else {
-  alert('Build script must have one argument of dev, patch, minor or major.', 'error')
+  alert('Build script must have one argument of dev, build, patch, minor or major.', 'error')
 }
 
 // Step: Fix code
@@ -279,7 +281,7 @@ fixCode(function () {
   cmd(__dirname, 'node checkLanguageFiles', function () {
     cmd(__dirname, 'node update-routes', function () {
       cmd(__dirname, 'node applyConfiguration', function () {
-        if (mode !== 'dev') {
+        if ((mode !== 'dev') && (mode !== 'build')) {
           // Update version in package.json
           let pkg = fs.readJsonSync(abs(env.proj, 'package.json'))
           pkg.version = ver.inc(pkg.version, mode)
