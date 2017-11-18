@@ -55,11 +55,13 @@ const createConfiguration = function (mode) {
     // CSS files
     {
       test: /\.css$/,
-      loader: mode === 'development' ? 'vue-style-loader!css-loader' : ExtractTextPlugin.extract(`css-loader${env.cfg.buildSourcemaps === true ? '?sourceMap' : ''}`),
+      loader: mode === 'development' ? 'vue-style-loader!css-loader?sourceMap' : ExtractTextPlugin.extract(['vue-style-loader', 'css-loader?sourceMap']),
+      //loader: 'vue-style-loader!css-loader?sourceMap'
     },
     {
       test: /\.s[a|c]ss$/,
-      loader: 'style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap'
+      //loader: 'style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap'
+      loader: mode === 'development' ? 'style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap' : ExtractTextPlugin.extract(['style-loader','css-loader','resolve-url-loader','sass-loader?sourceMap']),
     },
     // Image files
     {
@@ -132,7 +134,7 @@ const createConfiguration = function (mode) {
     plugins: [],
   }
 
-  // Add themes on production build
+  //Add themes on production build
   if (mode === 'production') {
     if (env.cfg.theme === 'ios-material' || env.cfg.theme === 'material-ios') {
       config.entry = us.extend({
@@ -215,7 +217,8 @@ const createConfiguration = function (mode) {
     config.vue = {
       loaders: {
         //css: 'file-loader!vue-style-loader|css-loader?sourceMap',
-        css: 'file-loader!vue-style-loader|css-loader?sourceMap!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+        //css: 'file-loader!vue-style-loader|css-loader?sourceMap!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+        css: 'file-loader!vue-style-loader|css-loader?sourceMap',
         scss: 'vue-style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap!sass-resources',
       },
     }
@@ -228,8 +231,12 @@ const createConfiguration = function (mode) {
       loaders: {
         // css: ExtractTextPlugin.extract('vue-style-loader', `css-loader${env.cfg.buildSourcemaps === true ? '?sourceMap' : ''}`),
         // sass: 'css-loader!sass-loader'
-        css: 'file-loader!vue-style-loader|css-loader?sourceMap!resolve-url-loader!sass-loader?sourceMap!sass-resources',
-        scss: 'vue-style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+        // css: 'file-loader!vue-style-loader|css-loader?sourceMap!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+        // scss: 'vue-style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap!sass-resources',
+
+
+        css: ExtractTextPlugin.extract(['file-loader', 'vue-style-loader', 'css-loader?sourceMap']),
+        scss: ExtractTextPlugin.extract(['vue-style-loader', 'css-loader', 'resolve-url-loader', 'sass-loader?sourceMap','sass-resources']),
       },
     }
   }
@@ -284,7 +291,7 @@ const createConfiguration = function (mode) {
   if (mode === 'production') {
     config.plugins.push(new OfflinePlugin({
       version: `v${env.pkg.version}`,
-      autoUpdate: 1000 * 60 * 15,
+      autoUpdate: false, //1000 * 60 * 15,
       publicPath: '/',
       externals: [
         'offline-service-worker.js',

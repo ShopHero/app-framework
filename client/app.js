@@ -1086,12 +1086,14 @@ mixins.manageState = {
       }
       function rememberState () {
         setTimeout(function () {
-          rememberViews()
-          rememberScroll()
-          rememberTab()
-          rememberOverlays()
-          rememberFormData()
-          rememberFocus()
+          if(false) {
+            rememberViews()
+            rememberScroll()
+            rememberTab()
+            rememberOverlays()
+            rememberFormData()
+            rememberFocus()
+          }
         }, 0)
       }
       function rememberViews () {

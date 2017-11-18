@@ -17,6 +17,7 @@
     "dev": "node scripts/dev",
     "ios": "node scripts/cordova --ios",
     "android": "node scripts/cordova --android",
+    "build": "node scripts/build --build",
     "patch": "node scripts/build --patch",
     "minor": "node scripts/build --minor",
     "major": "node scripts/build --major",
