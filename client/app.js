@@ -26,7 +26,9 @@ let manageComponentData = {
     })
   },
   updated: function () {
-    this.rememberData()
+    if(false) {
+      this.rememberData()
+    }
   },
   methods: {
     restoreData: function () {
