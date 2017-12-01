@@ -14,7 +14,8 @@
     ".editorconfig": true,
     "build/": true,
     "build/*": true,
-    "phonegap/platforms/*": true
+    "phonegap/platforms/*": true,
+    "phonegap/plugins/*": true
   },
   "npmignore": {
     "_SYNCAPP/": true,
