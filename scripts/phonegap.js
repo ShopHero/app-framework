@@ -27,17 +27,19 @@ let xml = require('xml2js')
 // Deploy current version by default
 if (env.arg.version === undefined && (env.arg.xcode === true || env.arg.studio === true)) {
   env.arg.version = env.pkg.version
-} else if (env.arg.ios === true || env.arg.android === true) {
+} else if (env.arg.ios === true || env.arg.android === true || env.arg.serve === true) {
   env.arg.version = 'dev'
 }
 
 // Check arguments
-if (env.arg.ios === true || env.arg.xcode === true) {
-  if (env.os !== 'mac') {
-    alert('iOS builds are only possible on macOS devices.', 'exit')
+if(env.arg.serve !== true) {
+  if (env.arg.ios === true || env.arg.xcode === true) {
+    if (env.os !== 'mac') {
+      alert('iOS builds are only possible on macOS devices.', 'exit')
+    }
+  } else if (env.arg.android !== true && env.arg.studio !== true) {
+    alert('Phonegap argument missing.', 'issue')
   }
-} else if (env.arg.android !== true && env.arg.studio !== true) {
-  alert('Cordova argument missing.', 'issue')
 }
 
 // Check store id
@@ -53,11 +55,12 @@ if (storeId === '') {
 }
 
 // Define Cordova bin directory
-let binDir = abs(env.proj, 'node_modules/phonegap/bin')
+//let binDir = abs(env.proj, 'node_modules/phonegap/bin')
+let binDir = abs('build-phonegap/bin')
 
 // Define build directories
 let buildSourceDir = abs(env.cache, 'snapshots', 'build-' + env.arg.version, 'build/www')
-let wwwFolder = abs(binDir, 'www')
+let wwwFolder = abs('build-phonegap/bin/www')
 
 // Define steps
 let deleteFiles = function (files, callback) {
@@ -374,6 +377,10 @@ let installCordovaPlugins = function (callback, pluginList) {
   }
 }
 let addCordovaPlatforms = function (callback) {
+  if (env.arg.serve === true) {
+    callback()
+    return
+  }
   alert('Phonegap platform installation ongoing - please wait ...')
   if (env.arg.ios === true || env.arg.xcode === true) {
     cmd(binDir, 'phonegap platform add ios', function () {
@@ -435,7 +442,7 @@ deployDevRules(function () {
                 if (env.arg.serve === true) {
                   alert('Phonegap server start ongoing - please wait ...')
                   cmd(binDir, 'phonegap serve', function () {
-                    alert('iOS emulator started.')
+                    alert('Phonegap server started.')
                   })
                 } else if (env.arg.ios === true) {
                   alert('iOS simulator start ongoing - please wait ...')
