@@ -30,7 +30,7 @@
     "studio": "node scripts/cordova --studio",
     "backup": "node scripts/backup",
     "snapshot": "node scripts/snapshot",
-    "phonegap-serve": "node scripts/phonegap --serve",
+    "phonegap-serve": "node scripts/build --serve",
     "zip": "node scripts/deprecated",
     "icons": "node scripts/deprecated"
   },

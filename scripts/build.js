@@ -21,6 +21,8 @@ if (env.arg.dev === true) {
   mode = 'dev'
 } else if (env.arg.build === true) {
   mode = 'build'
+} else if (env.arg.serve === true) {
+  mode = 'build'
 } else if (env.arg.patch === true) {
   mode = 'patch'
 } else if (env.arg.minor === true) {
@@ -321,6 +323,27 @@ fixCode(function () {
                                         // Create snapshot
                                         cmd(__dirname, 'node create-snapshot --name "build-' + env.pkg.version + '"', function () {
                                           alert('Build process done for version ' + env.pkg.version + '.')
+
+                                            if (env.arg.serve === true) {
+                                              const wwwFolder = abs(env.proj, 'build/www')
+                                              fs.readFile(abs(wwwFolder, 'index.html'), 'utf8', function (err, html) {
+                                                if (!err) {
+                                                  html = html.replace('<script', '<script type=text/javascript src=cordova.js></script><script')
+                                                  fs.writeFile(abs(wwwFolder, 'index.html'), html, function (err) {
+                                                    if (!err) {
+                                                      alert('Phonegap build folder update done.')
+                                                      cmd(abs(env.proj, 'phonegap'), 'phonegap serve', function () {})
+                                                    } else {
+                                                      alert('Failed to update the index.html file', 'issue')
+                                                    }
+                                                  })
+                                                } else {
+                                                  alert('Failed to read the index.html file.', 'issue')
+                                                }
+                                              })
+
+                                            }
+
                                         })
                                       })
                                     }
