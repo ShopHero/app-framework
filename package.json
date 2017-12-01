@@ -30,6 +30,7 @@
     "studio": "node scripts/cordova --studio",
     "backup": "node scripts/backup",
     "snapshot": "node scripts/snapshot",
+    "phonegap-serve": "node scripts/phonegap --serve",
     "zip": "node scripts/deprecated",
     "icons": "node scripts/deprecated"
   },
@@ -82,6 +83,7 @@
     "on-build-webpack": "^0.1.0",
     "opn": "^4.0.2",
     "package-json": "^4.0.1",
+    "phonegap": "^7.1.1",
     "recursive-readdir": "^2.1.1",
     "recursive-readdir-sync": "^1.0.6",
     "resolve-url-loader": "^2.2.0",
