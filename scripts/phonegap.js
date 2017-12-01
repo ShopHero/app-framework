@@ -366,7 +366,7 @@ let installCordovaPlugins = function (callback, pluginList) {
     let additionalCommand = nextPlugin === 'cordova-plugin-camera'
       ? ' --variable CAMERA_USAGE_DESCRIPTION="' + env.cfg.title + ' camera use" --variable PHOTOLIBRARY_USAGE_DESCRIPTION="' + env.cfg.title + ' photo library use"'
       : ''
-    cmd(binDir, 'phonegap plugin add ' + nextPlugin + additionalCommand, function () {
+    cmd(binDir, 'phonegap cordova plugin add ' + nextPlugin + additionalCommand, function () {
       installCordovaPlugins(callback, pluginList)
     }, function () {
       alert('Failed to install Phonegap plugins.', 'issue')
@@ -446,7 +446,7 @@ deployDevRules(function () {
                   })
                 } else if (env.arg.ios === true) {
                   alert('iOS simulator start ongoing - please wait ...')
-                  cmd(binDir, 'cordova emulate ios', function () {
+                  cmd(binDir, 'phonegap cordova emulate ios', function () {
                     alert('iOS emulator started.')
                   })
                 } else if (env.arg.xcode === true) {
@@ -460,7 +460,7 @@ deployDevRules(function () {
                   })
                 } else if (env.arg.android === true) {
                   alert('Android simulator start ongoing - please wait ...')
-                  cmd(binDir, 'cordova emulate android', function () {
+                  cmd(binDir, 'phonegap cordova emulate android', function () {
                     alert('Android emulator started.')
                   })
                 } else if (env.arg.studio === true) {
