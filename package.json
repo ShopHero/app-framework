@@ -5,6 +5,7 @@
   "repository": "https://github.com/scriptPilot/app-framework.git",
   "version": "1.19.4",
   "license": "MIT",
+  "private": true,
   "scripts": {
     "postinstall": "node scripts/postinstall",
     "reset-app": "node scripts/reset-app",
@@ -83,7 +84,7 @@
     "on-build-webpack": "^0.1.0",
     "opn": "^4.0.2",
     "package-json": "^4.0.1",
-    "phonegap": "^7.1.1",
+    "phonegap": "^6",
     "recursive-readdir": "^2.1.1",
     "recursive-readdir-sync": "^1.0.6",
     "resolve-url-loader": "^2.2.0",
